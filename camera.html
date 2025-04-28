@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional Webcam Diagnostics | Camera Test Tool</title>
+    <meta name="description" content="Comprehensive webcam testing tool to verify your camera functionality, resolution, and performance.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --primary-dark: #3a56d4;
+            --success: #4cc9f0;
+            --error: #f72585;
+            --warning: #f8961e;
+            --dark: #212529;
+            --light: #f8f9fa;
+            --gray: #6c757d;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            color: var(--dark);
+            background-color: #f5f7ff;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            overflow: hidden;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            color: var(--primary);
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: var(--gray);
+            font-size: 1.1rem;
+        }
+
+        .video-container {
+            position: relative;
+            width: 100%;
+            max-width: 720px;
+            margin: 0 auto 2rem;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            background: #000;
+            aspect-ratio: 16/9;
+        }
+
+        #videoElement {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+        }
+
+        .video-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            padding: 2rem;
+            color: white;
+            text-align: center;
+            background: linear-gradient(135deg, #3a56d4 0%, #4361ee 100%);
+        }
+
+        .video-placeholder svg {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 1rem;
+            fill: white;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            max-width: 720px;
+            margin: 0 auto;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 0.8rem 1.8rem;
+            border: none;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        button svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background-color: white;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+
+        .btn-secondary:hover {
+            background-color: #f0f4ff;
+        }
+
+        .btn-success {
+            background-color: var(--success);
+            color: white;
+        }
+
+        .btn-danger {
+            background-color: var(--error);
+            color: white;
+        }
+
+        #startButton {
+            margin: 0 auto;
+        }
+
+        #status {
+            text-align: center;
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            margin: 1rem 0;
+            font-weight: 500;
+        }
+
+        .status-pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .status-success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .status-error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .camera-info {
+            display: none;
+            background: #f8f9fa;
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .camera-info h3 {
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .info-item {
+            background: white;
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .info-item h4 {
+            font-size: 0.9rem;
+            color: var(--gray);
+            margin-bottom: 0.5rem;
+        }
+
+        .info-item p {
+            font-weight: 600;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: auto;
+            padding: 2rem;
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .card {
+                padding: 1.5rem;
+            }
+            
+            .header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="header">
+                <h1>Webcam Diagnostics Tool</h1>
+                <p>Test your camera functionality, verify resolution, and check performance</p>
+            </div>
+            
+            <div class="video-container">
+                <video id="videoElement" autoplay playsinline></video>
+                <div class="video-placeholder" id="videoPlaceholder">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4zM14 13h-3v3H9v-3H6v-2h3V8h2v3h3v2z"/>
+                    </svg>
+                    <h3>Camera Preview</h3>
+                    <p>Click "Start Camera Test" to begin diagnostics</p>
+                </div>
+            </div>
+            
+            <div id="status" class="status-pending">
+                Ready to test your webcam. Please allow camera access when prompted.
+            </div>
+            
+            <div class="controls">
+                <button id="startButton" class="btn-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/>
+                    </svg>
+                    Start Camera Test
+                </button>
+                
+                <div class="button-group" id="controlButtons" style="display: none;">
+                    <button id="stopButton" class="btn-secondary">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/>
+                        </svg>
+                        Stop Camera
+                    </button>
+                    <button id="captureButton" class="btn-success">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path fill="currentColor" d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/>
+                        </svg>
+                        Capture Test Image
+                    </button>
+                    <button id="settingsButton" class="btn-secondary">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path fill="currentColor" d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+                        </svg>
+                        Camera Settings
+                    </button>
+                </div>
+            </div>
+            
+            <div class="camera-info" id="cameraInfo">
+                <h3>Camera Information</h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <h4>Status</h4>
+                        <p id="infoStatus">Inactive</p>
+                    </div>
+                    <div class="info-item">
+                        <h4>Resolution</h4>
+                        <p id="infoResolution">--</p>
+                    </div>
+                    <div class="info-item">
+                        <h4>Frame Rate</h4>
+                        <p id="infoFramerate">--</p>
+                    </div>
+                    <div class="info-item">
+                        <h4>Device Name</h4>
+                        <p id="infoDevice">--</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>© 2023 Webcam Diagnostics Tool | Privacy Policy | Terms of Service</p>
+    </div>
+
+    <script>
+        const videoElement = document.getElementById('videoElement');
+        const videoPlaceholder = document.getElementById('videoPlaceholder');
+        const startButton = document.getElementById('startButton');
+        const stopButton = document.getElementById('stopButton');
+        const captureButton = document.getElementById('captureButton');
+        const settingsButton = document.getElementById('settingsButton');
+        const statusElement = document.getElementById('status');
+        const cameraInfo = document.getElementById('cameraInfo');
+        const controlButtons = document.getElementById('controlButtons');
+        
+        // Info display elements
+        const infoStatus = document.getElementById('infoStatus');
+        const infoResolution = document.getElementById('infoResolution');
+        const infoFramerate = document.getElementById('infoFramerate');
+        const infoDevice = document.getElementById('infoDevice');
+        
+        let stream = null;
+        
+        async function enableWebcam() {
+            statusElement.textContent = 'Requesting camera access...';
+            statusElement.className = 'status-pending';
+            
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: {
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 },
+                        facingMode: 'user'
+                    },
+                    audio: false
+                });
+                
+                videoElement.srcObject = stream;
+                videoElement.style.display = 'block';
+                videoPlaceholder.style.display = 'none';
+                startButton.style.display = 'none';
+                controlButtons.style.display = 'flex';
+                cameraInfo.style.display = 'block';
+                
+                statusElement.textContent = 'Camera access granted. Your camera is now active.';
+                statusElement.className = 'status-success';
+                
+                // Update camera information
+                updateCameraInfo(stream);
+                
+            } catch (error) {
+                console.error('Error accessing camera:', error);
+                statusElement.className = 'status-error';
+                
+                if (error.name === 'NotAllowedError') {
+                    statusElement.textContent = 'Error: Camera access was denied. Please allow camera permissions to use this tool.';
+                } else if (error.name === 'NotFoundError') {
+                    statusElement.textContent = 'Error: No camera device found. Please connect a camera and try again.';
+                } else if (error.name === 'NotReadableError') {
+                    statusElement.textContent = 'Error: Camera is already in use by another application. Please close other applications using the camera.';
+                } else {
+                    statusElement.textContent = 'Error: Could not access camera. ' + error.message;
+                }
+            }
+        }
+        
+        function updateCameraInfo(stream) {
+            const videoTrack = stream.getVideoTracks()[0];
+            const settings = videoTrack.getSettings();
+            
+            infoStatus.textContent = 'Active';
+            infoResolution.textContent = `${settings.width} × ${settings.height}`;
+            infoFramerate.textContent = settings.frameRate ? `${settings.frameRate} fps` : '--';
+            infoDevice.textContent = videoTrack.label || 'Default camera';
+        }
+        
+        function stopWebcam() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                videoElement.srcObject = null;
+                videoElement.style.display = 'none';
+                videoPlaceholder.style.display = 'flex';
+                controlButtons.style.display = 'none';
+                startButton.style.display = 'inline-flex';
+                cameraInfo.style.display = 'none';
+                
+                statusElement.textContent = 'Camera has been stopped. Click "Start Camera Test" to begin again.';
+                statusElement.className = 'status-pending';
+                
+                infoStatus.textContent = 'Inactive';
+                infoResolution.textContent = '--';
+                infoFramerate.textContent = '--';
+                infoDevice.textContent = '--';
+                
+                stream = null;
+            }
+        }
+        
+        function captureImage() {
+            if (!stream) return;
+            
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const videoTrack = stream.getVideoTracks()[0];
+            const settings = videoTrack.getSettings();
+            
+            canvas.width = settings.width;
+            canvas.height = settings.height;
+            ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+            
+            // Create download link
+            const link = document.createElement('a');
+            link.download = 'camera-test-' + new Date().toISOString().replace(/[:.]/g, '-') + '.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+            
+            statusElement.textContent = 'Test image captured and downloaded.';
+            statusElement.className = 'status-success';
+            
+            setTimeout(() => {
+                statusElement.textContent = 'Camera is active.';
+                statusElement.className = 'status-success';
+            }, 3000);
+        }
+        
+        function openCameraSettings() {
+            if (!stream) return;
+            
+            const videoTrack = stream.getVideoTracks()[0];
+            if (typeof videoTrack.applyConstraints === 'function' && 
+                typeof videoTrack.getCapabilities === 'function' &&
+                typeof videoTrack.getSettings === 'function') {
+                
+                // In a real application, you would implement a settings dialog
+                // that uses applyConstraints() to change camera settings
+                statusElement.textContent = 'Camera settings are available in supported browsers.';
+                statusElement.className = 'status-pending';
+            } else {
+                statusElement.textContent = 'Camera settings are not available in this browser.';
+                statusElement.className = 'status-error';
+            }
+        }
+        
+        // Event listeners
+        startButton.addEventListener('click', enableWebcam);
+        stopButton.addEventListener('click', stopWebcam);
+        captureButton.addEventListener('click', captureImage);
+        settingsButton.addEventListener('click', openCameraSettings);
+        
+        // Check for camera support on page load
+        window.addEventListener('load', () => {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                statusElement.textContent = 'Error: Camera API not supported in this browser.';
+                statusElement.className = 'status-error';
+                startButton.disabled = true;
+            }
+        });
+    </script>
+</body>
+</html>
